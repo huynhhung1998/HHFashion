@@ -31,7 +31,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost:3000",
-      "https://hhfashion.onrender.com",
+      "https://hhfashion-2b62.onrender.com",
     ],
     credentials: true,
   })
