@@ -31,11 +31,8 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost:3000",
-      "https://web-fashion-4lr0.onrender.com", // 
+      "https://hhfashion.onrender.com",
     ],
-    credentials: true,
-  })
-);
     credentials: true,
   })
 );
