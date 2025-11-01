@@ -1,5 +1,5 @@
 // src/components/OrderPage/Order.jsx
-import React, { useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import api from "@/utils/api";
 import useToast from "@/hooks/useToast";
 import {
@@ -28,6 +28,15 @@ const Order = () => {
   const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
   const [reorderId, setReorderId] = useState(null);
   const toast = useToast();
+  const [isChangeAddressModalOpen, setIsChangeAddressModalOpen] = useState(false);
+const [changeAddressOrderId, setChangeAddressOrderId] = useState(null);
+const [newAddress, setNewAddress] = useState("");
+const openChangeAddressModal = (orderId) => {
+  setChangeAddressOrderId(orderId);
+  setIsChangeAddressModalOpen(true);
+};
+
+const isFetching = useRef(false);
 
   useEffect(() => {
     const loadUser = () => {
@@ -48,26 +57,75 @@ const Order = () => {
   }, []);
 
   const fetchOrders = async () => {
+  if (isFetching.current) return; // tránh gọi chồng
+  isFetching.current = true;
+
+  try {
     if (!user?.id) {
       setOrders([]);
       setLoading(false);
       return;
     }
+
     setLoading(true);
-    try {
-      const res = await api.get(`/orders/active/${user.id}`);
-      const data = res.data?.data || [];
-      data.sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-      setOrders(data);
-    } catch (err) {
-      console.error("Lỗi khi lấy danh sách đơn hàng:", err);
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const res = await api.get(`/orders/active/${user.id}`);
+    const data = res.data?.data || [];
+    data.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    setOrders(data);
+  } catch (err) {
+    console.error("❌ Lỗi khi lấy danh sách đơn hàng:", err);
+    setOrders([]);
+  } finally {
+    setLoading(false);
+    isFetching.current = false; // ✅ cần dòng này
+  }
+};
+
+const testAddNote = async () => {
+  try {
+    console.log("📝 Gửi API POST /notes...");
+    const res = await api.post(`/orders/${changeAddressOrderId}/notes`, {
+      note: "Test ghi chú",
+    });
+    console.log("✅ Kết quả:", res.data);
+  } catch (err) {
+    console.log("❌ LỖI:", err);
+  }
+};
+
+const handleAddNote = async () => {
+  if (!changeAddressOrderId || !newAddress.trim()) {
+    toast.error("Vui lòng nhập ghi chú hoặc địa chỉ mới.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    // Gọi API thêm note (hoặc địa chỉ nếu bạn muốn)
+    const res = await api.post(`/orders/${changeAddressOrderId}/notes`, {
+      note: newAddress.trim(),
+    });
+
+    console.log("✅ Ghi chú đã được thêm:", res.data);
+
+    // Làm mới danh sách đơn hàng
+    await fetchOrders();
+
+    toast.success("Đã thêm ghi chú thành công!");
+
+    // Reset input & đóng modal
+    setNewAddress("");
+    setIsChangeAddressModalOpen(false);
+  } catch (err) {
+    console.error("❌ Lỗi khi thêm ghi chú:", err);
+    toast.error("Không thể thêm ghi chú. Vui lòng thử lại.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     if (user?.id) fetchOrders();
@@ -130,6 +188,36 @@ const Order = () => {
     setCancelOrderId(orderId);
     setIsCancelModalOpen(true);
   };
+
+const confirmChangeAddress = async () => {
+  if (!changeAddressOrderId || !newAddress.trim()) {
+    toast.error("Vui lòng nhập địa chỉ mới.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    await api.patch(`/orders/${changeAddressOrderId}/address`, {
+      deliveryAddress: newAddress.trim(),
+    });
+
+    // ✅ reset flag trước khi gọi fetch
+    isFetching.current = false;
+
+    await fetchOrders();
+
+    toast.success("Cập nhật địa chỉ thành công!");
+  } catch (err) {
+    console.error("❌ Lỗi khi đổi địa chỉ:", err);
+    toast.error("Không thể cập nhật địa chỉ. Vui lòng thử lại.");
+  } finally {
+    setLoading(false);  // ✅ đảm bảo luôn tắt loading
+    setIsChangeAddressModalOpen(false);
+    setNewAddress("");
+  }
+};
+
 
   const confirmCancelOrder = async () => {
     if (!cancelOrderId) return;
@@ -455,6 +543,46 @@ const Order = () => {
           </div>
         </div>
       )}
+
+      {/* Modal đổi địa chỉ */}
+{isChangeAddressModalOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center animate-fadeIn">
+    <div
+      className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+      onClick={() => setIsChangeAddressModalOpen(false)}
+    />
+    <div className="relative z-10 w-full max-w-sm bg-white rounded-2xl p-6 shadow-2xl animate-scaleIn">
+      <h4 className="text-xl font-semibold mb-3 flex items-center gap-2 text-indigo-600">
+        <MapPin /> Đổi địa chỉ giao hàng
+      </h4>
+      <p className="text-gray-700 mb-4">
+        Nhập địa chỉ giao hàng mới cho đơn hàng của bạn:
+      </p>
+      <input
+        type="text"
+        value={newAddress}
+        onChange={(e) => setNewAddress(e.target.value)}
+        placeholder="Nhập địa chỉ mới..."
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-5 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+      />
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => setIsChangeAddressModalOpen(false)}
+          className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+        >
+          Hủy
+        </button>
+        <button
+          onClick={handleAddNote}
+          className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"
+        >
+          Lưu địa chỉ
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
