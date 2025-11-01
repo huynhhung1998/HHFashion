@@ -227,7 +227,7 @@ const Order = () => {
                         onClick={() => openChangeAddressModal(orderId)}
                         className="flex items-center gap-1 px-3 py-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 text-sm"
                       >
-                        <MapPin size={16} /> Đổi địa chỉ
+                        <MapPin size={16} /> Đang trên đường
                       </button>
                     )}
 
