@@ -37,7 +37,7 @@ export default function Login() {
       window.dispatchEvent(new Event("userUpdated"));
        window.dispatchEvent(new Event("cartUpdated"));
       toast.success("Đăng nhập thành công");
-      navigate(user.role === "admin" || user.role === "seller" ? "/dashboard" : "/");
+      navigate(user.role === "admin" || user.role === "seller" ? "dashboard/dashboard" : "/");
     } catch (err) {
       const msg = err.response?.data?.message || "Có lỗi xảy ra khi đăng nhập";
       toast.error(msg);
