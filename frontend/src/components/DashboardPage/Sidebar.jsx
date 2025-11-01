@@ -34,9 +34,7 @@ const Sidebar = () => {
     { name: "Người dùng", path: "/dashboard/users", icon: <Users size={18} /> },
     { name: "Cửa hàng", path: "/dashboard/stores", icon: <Store size={18} /> },
     { name: "Sản phẩm", path: "/dashboard/products", icon: <Package size={18} /> },
-    { name: "Giao dịch", path: "/dashboard/transactions", icon: <CreditCard size={18} /> },
-    { name: "Báo cáo", path: "/dashboard/reports", icon: <BarChart2 size={18} /> },
-    { name: "Cài đặt", path: "/dashboard/settings", icon: <Settings size={18} /> },
+
   ];
 
   // ✅ Nếu là seller → chỉ hiển thị "Cửa hàng" & "Sản phẩm"
