@@ -148,6 +148,8 @@ useEffect(() => {
     return "https://i.pravatar.cc/40";
   };
 
+  
+
   return (
     <nav
       className={`w-full z-50 transition-all duration-500 ${
@@ -198,6 +200,20 @@ useEffect(() => {
   >
     Thông tin
   </NavLink>
+
+  {(user?.role === "admin" || user?.role === "seller") && (
+  <NavLink
+    to="/dashboard/stores"
+    className={({ isActive }) =>
+      `relative flex flex-col items-center transition-all duration-300 ${
+        isActive ? "text-black" : "hover:text-black text-gray-600"
+      }`
+    }
+  >
+    Quản lý
+  </NavLink>
+)}
+
 
   {/* Liên hệ: scroll xuống footer */}
   <button
